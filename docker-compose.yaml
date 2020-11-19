@@ -1,0 +1,18 @@
+version: '3.6'
+x-defaults: &defaults
+  env_file: .env
+  restart: unless-stopped
+  logging:
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  screenshots:
+    image: trivialsec/screenshots
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+networks:
+  trivialsec:
