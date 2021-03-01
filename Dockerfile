@@ -18,7 +18,7 @@ RUN bash install-google-chrome.sh && \
     yum clean metadata && \
     yum -q -y clean all && \
     python3.8 -m pip install -q --no-cache-dir -U pip && \
-    python3.8 -m pip install -q --no-cache-dir -U --use-feature=2020-resolver setuptools wheel
+    python3.8 -m pip install -q --no-cache-dir -U setuptools wheel
 
 COPY src src
 

@@ -1,0 +1,105 @@
+before_script:
+  - python3 --version
+  - pylint --version
+  - aws --version
+
+stages:
+  - test
+  - build
+  - deploy
+
+lint:
+  retry: 2
+  tags:
+    - python
+  stage: test
+  script:
+    - pip install -q -U pylint
+    # - make lint
+  only:
+    refs:
+      - merge_request
+
+build-package:
+  retry: 2
+  tags:
+    - python
+  stage: build
+  variables:
+    PKG_PATH: scripts/deploy/packages
+  script:
+    - pip install -q -U setuptools wheel
+    - make package
+  only:
+    refs:
+      - merge_request
+
+build-artifacts:
+  retry: 2
+  tags:
+    - python
+  stage: build
+  variables:
+    PKG_PATH: scripts/deploy/packages
+    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+    AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+  script:
+    - make cloudformation-upload
+    - make update-proxy
+    - pip install -q -U setuptools wheel
+    - make package-upload
+  only:
+    refs:
+      - master
+
+deploy-web:
+  tags:
+    - python
+  stage: deploy
+  variables:
+    TARGET_GROUP_ARN: arn:aws:elasticloadbalancing:ap-southeast-2:814504268053:targetgroup/trivialsec-prod/fcf5cd3c70ceb857
+    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+    AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+  script:
+    - COUNT=$(aws elbv2 describe-target-health --target-group-arn ${TARGET_GROUP_ARN} --query 'TargetHealthDescriptions[]' | jq '. | length')
+    - echo ${COUNT}
+    - bash -c "./scripts/deploy/launch-webservers.sh ${COUNT}"
+  only:
+    refs:
+      - master
+
+# deploy-sockets:
+#   tags:
+#     - python
+#   stage: deploy
+#   variables:
+#     TARGET_GROUP_ARN: arn:aws:elasticloadbalancing:ap-southeast-2:814504268053:targetgroup/trivialsec-prod-sockets/00073980e0e9f7a8
+#     AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+#     AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+#   script:
+#     - COUNT=$(aws elbv2 describe-target-health --target-group-arn ${TARGET_GROUP_ARN} --query 'TargetHealthDescriptions[]' | jq '. | length')
+#     - echo ${COUNT}
+#     - bash -c "./scripts/deploy/launch-sockets.sh ${COUNT}"
+#   only:
+#     refs:
+#       - master
+
+deploy-worker:
+  tags:
+    - python
+  stage: deploy
+  variables:
+    TAG_NAME: Worker
+    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+    AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+  script:
+    - COUNT=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${TAG_NAME}" --query 'Reservations[].Instances[]' | jq '. | length')
+    - echo ${COUNT}
+    - bash -c "./scripts/deploy/launch-worker.sh ${COUNT}"
+  only:
+    refs:
+      - master
