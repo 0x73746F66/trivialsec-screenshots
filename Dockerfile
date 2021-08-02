@@ -1,4 +1,4 @@
-FROM trivialsec/node-base
+FROM registry.gitlab.com/trivialsec/containers-common/nodejs
 
 WORKDIR /srv/app
 
@@ -22,6 +22,6 @@ RUN bash install-google-chrome.sh && \
 
 COPY src src
 
-USER ec2-user
+USER trivialsec
 ENTRYPOINT ["/usr/bin/python3.8"]
 CMD ["src/main.py"]

@@ -13,6 +13,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    networks:
+      default:
+        aliases:
+          - screenshots
 
 networks:
-  trivialsec:
+  default:
+    external:
+      name: trivialsec
