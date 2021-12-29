@@ -26,8 +26,8 @@ prep:
 wheel: prep
 	rm -rf common/build common/dist common/trivialsec_common.egg-info web/docker/build workers/docker/build web/docker/packages workers/docker/packages
 	pip uninstall -y trivialsec-common || true
-	cd common; python3.8 setup.py check && pip --no-cache-dir wheel --wheel-dir=build/wheel -r requirements.txt && \
-		python3.8 setup.py bdist_wheel --universal
+	cd common; python3 setup.py check && pip --no-cache-dir wheel --wheel-dir=build/wheel -r requirements.txt && \
+		python3 setup.py bdist_wheel --universal
 	pip install --no-cache-dir --find-links=common/build/wheel --no-index common/dist/trivialsec_common-*-py2.py3-none-any.whl
 	cp -r common/build/wheel web/docker/build
 	cp common/dist/trivialsec_common-*.whl web/docker/build/
@@ -39,9 +39,9 @@ watch:
 
 install-dev:
 	pip install -q -U pip setuptools pylint wheel awscli
-	pip install -q -U --no-cache-dir --isolated -r ./common/requirements.txt
-	pip install -q -U --no-cache-dir --isolated -r ./web/docker/requirements.txt
-	pip install -q -U --no-cache-dir --isolated -r ./workers/docker/requirements.txt
+	pip install -q -U -r ./common/requirements.txt
+	pip install -q -U -r ./web/docker/requirements.txt
+	pip install -q -U -r ./workers/docker/requirements.txt
 
 lint:
 	cd workers/src; pylint --jobs=0 --persistent=y --errors-only **/*.py
@@ -146,14 +146,14 @@ package: wheel
 	rm -rf bin
 
 package-upload: package
-	$(CMD_AWS) s3 cp common/dist/trivialsec_common-$(COMMON_VERSION)-py2.py3-none-any.whl s3://trivialsec-assets/deploy-packages/trivialsec_common-$(COMMON_VERSION)-py2.py3-none-any.whl
-	$(CMD_AWS) s3 cp $(PKG_PATH)/build.zip s3://trivialsec-assets/deploy-packages/build-$(COMMON_VERSION).zip
-	$(CMD_AWS) s3 cp $(PKG_PATH)/openssl.zip s3://trivialsec-assets/deploy-packages/openssl-$(COMMON_VERSION).zip
-	$(CMD_AWS) s3 cp $(PKG_PATH)/testssl.zip s3://trivialsec-assets/deploy-packages/testssl-$(COMMON_VERSION).zip
-	$(CMD_AWS) s3 cp $(PKG_PATH)/web.zip s3://trivialsec-assets/deploy-packages/web-$(COMMON_VERSION).zip
-	$(CMD_AWS) s3 cp $(PKG_PATH)/worker.zip s3://trivialsec-assets/deploy-packages/worker-$(COMMON_VERSION).zip
-	$(CMD_AWS) s3 cp $(PKG_PATH)/sockets.zip s3://trivialsec-assets/deploy-packages/sockets-$(COMMON_VERSION).zip
-	$(CMD_AWS) s3 cp $(PKG_PATH)/amass_linux_amd64.zip s3://trivialsec-assets/deploy-packages/amass_linux_amd64-$(COMMON_VERSION).zip
+	$(CMD_AWS) s3 cp common/dist/trivialsec_common-$(TRIVIALSEC_PY_LIB_VER)-py2.py3-none-any.whl s3://trivialsec-assets/deploy-packages/trivialsec_common-$(TRIVIALSEC_PY_LIB_VER)-py2.py3-none-any.whl
+	$(CMD_AWS) s3 cp $(PKG_PATH)/build.zip s3://trivialsec-assets/deploy-packages/build-$(TRIVIALSEC_PY_LIB_VER).zip
+	$(CMD_AWS) s3 cp $(PKG_PATH)/openssl.zip s3://trivialsec-assets/deploy-packages/openssl-$(TRIVIALSEC_PY_LIB_VER).zip
+	$(CMD_AWS) s3 cp $(PKG_PATH)/testssl.zip s3://trivialsec-assets/deploy-packages/testssl-$(TRIVIALSEC_PY_LIB_VER).zip
+	$(CMD_AWS) s3 cp $(PKG_PATH)/web.zip s3://trivialsec-assets/deploy-packages/web-$(TRIVIALSEC_PY_LIB_VER).zip
+	$(CMD_AWS) s3 cp $(PKG_PATH)/worker.zip s3://trivialsec-assets/deploy-packages/worker-$(TRIVIALSEC_PY_LIB_VER).zip
+	$(CMD_AWS) s3 cp $(PKG_PATH)/sockets.zip s3://trivialsec-assets/deploy-packages/sockets-$(TRIVIALSEC_PY_LIB_VER).zip
+	$(CMD_AWS) s3 cp $(PKG_PATH)/amass_linux_amd64.zip s3://trivialsec-assets/deploy-packages/amass_linux_amd64-$(TRIVIALSEC_PY_LIB_VER).zip
 	$(CMD_AWS) s3 cp web/docker/nginx.conf s3://trivialsec-assets/deploy-packages/nginx.conf
 
 update-proxy:
